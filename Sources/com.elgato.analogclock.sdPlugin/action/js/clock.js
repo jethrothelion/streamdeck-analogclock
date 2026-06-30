@@ -67,41 +67,58 @@ function Clock(cnv) {
         ctx.fillText(sTime, ctx.canvas.width / 2, (ctx.canvas.height + fSize / 3) / 2);
     };
 
+    function buildBackgroundCache(forType) {
+    bgCache = bgCache || document.createElement('canvas');
+    bgCache.width = cnv.width;
+    bgCache.height = cnv.height;
+    var bctx = bgCache.getContext('2d');
+
+    bctx.clearRect(0, 0, bgCache.width, bgCache.height);
+
+    if(colors.background !== 'transparent') {
+        bctx.fillStyle = colors.background;
+        bctx.fillRect(0, 0, bgCache.width, bgCache.height);
+    }
+
+    if(forType !== 'digital') {
+        for(var i = 0;i < 12;i++) {
+            var innerDist = (i % 3) ? 0.8 : 0.775;
+            var outerDist = 1;
+            bctx.lineWidth = (i % 3) ? 4 : 5;
+            bctx.strokeStyle = colors.stroke;
+
+            var armRadians = (twoPi * (i / 12)) - (twoPi / 4);
+            var x1 = clockX + Math.cos(armRadians) * (innerDist * clockRadius);
+            var y1 = clockY + Math.sin(armRadians) * (innerDist * clockRadius);
+            var x2 = clockX + Math.cos(armRadians) * (outerDist * clockRadius);
+            var y2 = clockY + Math.sin(armRadians) * (outerDist * clockRadius);
+
+            bctx.beginPath();
+            bctx.moveTo(x1, y1);
+            bctx.lineTo(x2, y2);
+            bctx.stroke();
+        }
+    }
+
+        cachedType = forType;
+    }
+
     function drawClock() {
         var now = new Date();
         var h = now.getHours() % 12;
         var m = now.getMinutes();
         var s = now.getSeconds();
 
-        if(colors.background == "transparent") {
-            ctx.clearRect(0, 0, cnv.width, cnv.height);
-        } else {
-            ctx.fillStyle = colors.background;
-            ctx.fillRect(0, 0, cnv.width, cnv.height);
+        if(!bgCache || cachedType !== this.type) {
+            buildBackgroundCache(this.type);
         }
+
+        ctx.clearRect(0, 0, cnv.width, cnv.height);
+        ctx.drawImage(bgCache, 0, 0);
 
         if(this.type === 'digital') {
             drawDigitalClock(now, h, m, s);
         } else {
-
-            for(var i = 0;i < 12;i++) {
-                var innerDist = (i % 3) ? 0.8 : 0.775;
-                var outerDist = 1; //(i % 3) ? 0.95 : 1.0;
-                ctx.lineWidth = (i % 3) ? 4 : 5;
-                ctx.strokeStyle = colors.stroke;
-
-                var armRadians = (twoPi * (i / 12)) - (twoPi / 4);
-                var x1 = clockX + Math.cos(armRadians) * (innerDist * clockRadius);
-                var y1 = clockY + Math.sin(armRadians) * (innerDist * clockRadius);
-                var x2 = clockX + Math.cos(armRadians) * (outerDist * clockRadius);
-                var y2 = clockY + Math.sin(armRadians) * (outerDist * clockRadius);
-
-                ctx.beginPath();
-                ctx.moveTo(x1, y1); // Start at the center
-                ctx.lineTo(x2, y2); // Draw a line outwards
-                ctx.stroke();
-            }
-
             var hProgress = (h / 12) + (1 / 12) * (m / 60) + (1 / 12) * (1 / 60) * (s / 60);
             var mProgress = (m / 60) + (1 / 60) * (s / 60);
             var sProgress = (s / 60);
@@ -120,6 +137,7 @@ function Clock(cnv) {
 
     function setColors(jsnColors) {
         (typeof jsnColors === 'object') && Object.keys(jsnColors).map(c => colors[c] = jsnColors[c]);
+        bgCache = null; // invalidate cache — face/colors changed, rebuild next draw
     }
 
     function getColors() {
