@@ -23,6 +23,14 @@
                 </div>
             </div>
         </div>
+        <div class="sdpi-item" id="single-check-seconds">
+            <div class="sdpi-item-label">Seconds</div>
+            <div class="sdpi-item-value">
+                <div class="sdpi-item-child">
+                    <input id="show_seconds" type="checkbox" value="seconds" checked onchange="sendValueToPlugin(event.target.checked, 'show_seconds')">
+                    <label for="show_seconds" class="sdpi-item-label"><span></span></label>
+            </div>
+        </div>
     </div>
 
     <script src="../common/common.js"></script>
@@ -95,6 +103,10 @@
                     })
 
                 }
+                if(jsonObj.payload.settings.hasOwnProperty('show_seconds')) {
+                    const oShowSeconds = document.querySelector("#show_seconds");
+                    oShowSeconds.checked = jsonObj.payload.settings.show_seconds;
+                };
             }
         });
 

@@ -42,6 +42,11 @@ var action = {
                 clock.setClockType(settings.clock_type);
             }
         }
+        if(settings.hasOwnProperty('show_seconds')) {
+            if(clock) {
+                clock.setShowSeconds(settings.show_seconds);
+            }
+        }
 
     },
 
@@ -144,7 +149,12 @@ function AnalogClock(jsonObj) {
 
     function drawClock(jsn) {
         clock.drawClock();
-        clockface.text === true && $SD.api.setTitle(context, new Date().toLocaleTimeString(), null);
+
+        var timeStr;
+        if (clock.getShowSeconds()) {timeStr = new Date().toLocaleTimeString();}
+        else{timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});}
+
+        clockface.text === true && $SD.api.setTitle(context, timeStr, null);
         $SD.api.setImage(
             context,
             clock.getImageData()
@@ -181,6 +191,11 @@ function AnalogClock(jsonObj) {
         }
     }
 
+    function setShowSeconds(flag) {
+        clock.setShowSeconds(flag);
+        drawClock();
+    }
+
     createClock();
 
     return {
@@ -198,6 +213,7 @@ function AnalogClock(jsonObj) {
         demo: demo,
         isDemo: isDemo,
         setClockType: setClockType,
-        getClockType: getClockType
+        getClockType: getClockType,
+        setShowSeconds: setShowSeconds
     };
 }

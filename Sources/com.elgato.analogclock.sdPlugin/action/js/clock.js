@@ -24,6 +24,9 @@ function Clock(cnv) {
     var twoPi = 2 * Math.PI;
     var colors = {};
     var type = 'analog';
+    var showSeconds = true;  
+    var bgCache = null;
+    var cachedType = null;
 
     resetColors();
 
@@ -58,7 +61,7 @@ function Clock(cnv) {
     function drawDigitalClock(date, h, m, s) {
         // const sTime = `${pad(h)}:${pad(m)}:${pad(s)}`;
         // const sTime = s % 2 == 0 ? date.toLocaleTimeString('en-US') : date.toLocaleTimeString();
-        const sTime = date.toLocaleTimeString();
+        const sTime = showSeconds ? date.toLocaleTimeString(): date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         const fSize = sTime.length > 8 ? 30 - sTime.length / 2 : 32;
         ctx.fillStyle = colors.stroke;
         ctx.font = `${fSize}px arial`;
@@ -68,39 +71,39 @@ function Clock(cnv) {
     };
 
     function buildBackgroundCache(forType) {
-    bgCache = bgCache || document.createElement('canvas');
-    bgCache.width = cnv.width;
-    bgCache.height = cnv.height;
-    var bctx = bgCache.getContext('2d');
+        bgCache = bgCache || document.createElement('canvas');
+        bgCache.width = cnv.width;
+        bgCache.height = cnv.height;
+        var bctx = bgCache.getContext('2d');
 
-    bctx.clearRect(0, 0, bgCache.width, bgCache.height);
+        bctx.clearRect(0, 0, bgCache.width, bgCache.height);
 
-    if(colors.background !== 'transparent') {
-        bctx.fillStyle = colors.background;
-        bctx.fillRect(0, 0, bgCache.width, bgCache.height);
-    }
-
-    if(forType !== 'digital') {
-        for(var i = 0;i < 12;i++) {
-            var innerDist = (i % 3) ? 0.8 : 0.775;
-            var outerDist = 1;
-            bctx.lineWidth = (i % 3) ? 4 : 5;
-            bctx.strokeStyle = colors.stroke;
-
-            var armRadians = (twoPi * (i / 12)) - (twoPi / 4);
-            var x1 = clockX + Math.cos(armRadians) * (innerDist * clockRadius);
-            var y1 = clockY + Math.sin(armRadians) * (innerDist * clockRadius);
-            var x2 = clockX + Math.cos(armRadians) * (outerDist * clockRadius);
-            var y2 = clockY + Math.sin(armRadians) * (outerDist * clockRadius);
-
-            bctx.beginPath();
-            bctx.moveTo(x1, y1);
-            bctx.lineTo(x2, y2);
-            bctx.stroke();
+        if(colors.background !== 'transparent') {
+            bctx.fillStyle = colors.background;
+            bctx.fillRect(0, 0, bgCache.width, bgCache.height);
         }
-    }
 
-        cachedType = forType;
+        if(forType !== 'digital') {
+            for(var i = 0;i < 12;i++) {
+                var innerDist = (i % 3) ? 0.8 : 0.775;
+                var outerDist = 1;
+                bctx.lineWidth = (i % 3) ? 4 : 5;
+                bctx.strokeStyle = colors.stroke;
+
+                var armRadians = (twoPi * (i / 12)) - (twoPi / 4);
+                var x1 = clockX + Math.cos(armRadians) * (innerDist * clockRadius);
+                var y1 = clockY + Math.sin(armRadians) * (innerDist * clockRadius);
+                var x2 = clockX + Math.cos(armRadians) * (outerDist * clockRadius);
+                var y2 = clockY + Math.sin(armRadians) * (outerDist * clockRadius);
+
+                bctx.beginPath();
+                bctx.moveTo(x1, y1);
+                bctx.lineTo(x2, y2);
+                bctx.stroke();
+            }
+        }
+
+            cachedType = forType;
     }
 
     function drawClock() {
@@ -129,9 +132,10 @@ function Clock(cnv) {
             drawArm(mProgress, 4, 3 / 4, colors.minute); // Minute
             drawArm(mProgress, 4, -2 / clockRadius, colors.minute); // Minute
 
-            drawArm(sProgress, 2, 1, colors.second); // Second
-            drawArm(sProgress, 2, -10 / clockRadius, colors.second); // Second
-
+            if(showSeconds) {
+                drawArm(sProgress, 2, 1, colors.second); // Second
+                drawArm(sProgress, 2, -10 / clockRadius, colors.second); // Second
+            }
         } // end type
     }
 
@@ -144,6 +148,14 @@ function Clock(cnv) {
         return this.colors;
     }
 
+    function setShowSeconds(flag) {
+        showSeconds = flag;
+    }
+
+    function getShowSeconds() {
+        return showSeconds;
+    }
+
     function getImageData() {
         return cnv.toDataURL();
     }
@@ -154,6 +166,8 @@ function Clock(cnv) {
         setColors: setColors,
         getColors: getColors,
         colors: colors,
-        resetColors: resetColors
+        resetColors: resetColors,
+        setShowSeconds: setShowSeconds,
+        getShowSeconds: getShowSeconds    
     };
 }
